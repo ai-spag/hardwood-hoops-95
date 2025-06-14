@@ -1,5 +1,5 @@
 # Hardwood Hoops '95 🏀
-Play the game here: [Play Hardwood Hoops '95!](https://yourusername.github.io/hardwood-hoops-95/hardwood-hoops-95.html)
+Play the game here: [Play Hardwood Hoops '95!](https://ai-spag.github.io/hardwood-hoops-95/hardwood-hoops-95.html)
 
 Step onto the pixelated court in **Hardwood Hoops '95**! This isn't just any game; it's a fast-paced, retro-style basketball experience featuring dynamic AI, progressive difficulty, and classic arcade controls. Relive the golden era of hoops! ✨
 
