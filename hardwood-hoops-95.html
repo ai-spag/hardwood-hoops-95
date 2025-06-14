@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hardwood Hoops '95</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* General styling for a retro look */
+        body {
+            font-family: 'Inter', sans-serif; /* Use Inter font as requested */
+            background-color: #2c3e50; /* Dark blue-grey background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars */
+            color: #ecf0f1; /* Light text color */
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-container {
+            background-color: #34495e; /* Slightly lighter blue-grey for container */
+            border: 8px solid #f39c12; /* Bold orange border, 90s feel */
+            border-radius: 15px; /* Rounded corners for the container */
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); /* Deep shadow for depth */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            max-width: 90%; /* Max width for responsiveness */
+            width: 800px; /* Base width */
+        }
+
+        canvas {
+            background-color: #a0522d; /* Wooden court color */
+            border: 4px solid #8b4513; /* Darker wood border */
+            display: block;
+            width: 100%; /* Make canvas responsive */
+            max-width: 760px; /* Max width to maintain aspect ratio */
+            height: 480px; /* Fixed height for 90s game feel, will scale with width */
+            border-radius: 8px; /* Rounded corners for the canvas */
+            image-rendering: pixelated; /* Ensure pixelated look */
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+
+        .scoreboard {
+            font-family: 'Press Start 2P', cursive; /* Pixel font for scoreboard */
+            background-color: #1a2a3a; /* Dark background for scoreboard */
+            padding: 10px 20px;
+            border-radius: 10px; /* Rounded corners */
+            border: 3px solid #f1c40f; /* Gold border */
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            width: calc(100% - 40px); /* Adjust width for padding */
+            max-width: 720px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 10px;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #ecf0f1;
+            font-size: 1.2em;
+            text-shadow: 2px 2px #000;
+        }
+
+        .score-number {
+            font-size: 2.5em;
+            color: #3498db; /* Blue for score */
+            margin-top: 5px;
+        }
+
+        .team-name {
+            font-size: 0.8em;
+            color: #bdc3c7; /* Lighter grey for team names */
+        }
+
+        .game-info {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1em;
+            color: #f1c40f; /* Gold for info text */
+            text-shadow: 1px 1px #000;
+            margin: 0 15px;
+        }
+
+        .controls {
+            background-color: #1a2a3a;
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #3498db; /* Blue border */
+            width: calc(100% - 40px);
+            max-width: 720px;
+            text-align: center;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls h3 {
+            font-family: 'Press Start 2P', cursive;
+            color: #ecf0f1;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .controls p {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #bdc3c7;
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2c3e50;
+            border: 5px solid #f39c12;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            color: #ecf0f1;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5em;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            display: flex; /* Changed to flex for centering content */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; /* Start hidden */
+            pointer-events: none; /* Disable interaction when hidden */
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .message-box.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .message-box button {
+            font-family: 'Press Start 2P', cursive;
+            background-color: #27ae60; /* Green button */
+            color: white;
+            border: 3px solid #2ecc71;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 0.8em;
+            box-shadow: 0 5px #1e8449; /* Darker green shadow */
+            transition: all 0.1s ease;
+        }
+
+        .message-box button:active {
+            box-shadow: 0 2px #1e8449;
+            transform: translateY(3px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 15px;
+                width: 95%;
+            }
+            canvas {
+                height: 300px; /* Adjust height for smaller screens */
+            }
+            .scoreboard, .controls {
+                padding: 10px;
+                width: calc(100% - 20px);
+            }
+            .score-number {
+                font-size: 2em;
+            }
+            .game-info {
+                font-size: 0.8em;
+                margin: 0 5px;
+            }
+            .controls p {
+                font-size: 0.8em;
+            }
+            .message-box {
+                font-size: 1.2em;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .scoreboard {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .score-item {
+                font-size: 1em;
+            }
+            .score-number {
+                font-size: 1.8em;
+            }
+            .game-info {
+                font-size: 0.7em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="scoreboard">
+            <div class="score-item">
+                <div class="team-name">PACERS</div>
+                <div id="pacers-score" class="score-number">0</div>
+            </div>
+            <div class="game-info" id="game-quarter">QTR 1</div>
+            <div class="game-info" id="shot-clock">SHOT 24</div>
+            <div class="score-item">
+                <div class="team-name">THUNDER</div>
+                <div id="thunder-score" class="score-number">0</div>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="760" height="480"></canvas>
+        <div class="controls">
+            <h3>CONTROLS</h3>
+            <p>
+                <strong>MOVE:</strong> Arrow Keys (← ↑ ↓ →)<br>
+                <strong>SHOOT / DUNK:</strong> Hold and Release Z Key<br>
+                <strong>GRAB BALL / STEAL:</strong> X Key<br>
+                <strong>PAUSE:</strong> P Key
+            </p>
+        </div>
+    </div>
+
+    <div id="messageBox" class="message-box active">
+        <p id="messageText">Welcome to Hardwood Hoops '95!</p>
+        <button id="messageButton">START GAME</button>
+    </div>
+
+    <script>
+        // Ensure the entire DOM is loaded before initializing the game
+        window.onload = function() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const pacersScoreElem = document.getElementById('pacers-score');
+            const thunderScoreElem = document.getElementById('thunder-score');
+            const gameQuarterElem = document.getElementById('game-quarter');
+            const shotClockElem = document.getElementById('shot-clock');
+            const messageBox = document.getElementById('messageBox');
+            const messageText = document.getElementById('messageText');
+            const messageButton = document.getElementById('messageButton');
+
+            let animationFrameId; // To store the requestAnimationFrame ID
+
+            // Game State Variables
+            let gamePaused = true;
+            let pacersScore = 0;
+            let thunderScore = 0;
+            let currentQuarter = 1;
+            let shotClock = 24;
+            let shotClockInterval;
+            let isScoring = false; // Flag to allow ball to go through net
+
+            let currentPossessionTeam = 'Pacers'; // Tracks which team has current "live" possession
+            let lastShooter = null; // Tracks which player last attempted a shot
+
+            // Difficulty variables
+            const baseAiStealChance = 0.002; // Initial chance per frame for AI to steal
+            const stealChanceIncreasePerQuarter = 0.001; // How much steal chance increases each quarter
+            let currentAiStealChance = baseAiStealChance;
+
+            const initialAiSpeed = 3;
+            const boostedAiSpeed = 5; // AI speed after difficulty spike
+            let hasBoostedAiDifficulty = false; // Flag to ensure difficulty spike happens only once
+
+            const aiBaseShotAccuracyVariance = 2; // Initial random variance in AI shots (+/- pixels)
+            const aiBoostedShotAccuracyVariance = 0.5; // Reduced variance after difficulty spike
+
+            // Player properties
+            const playerWidth = 30;
+            const playerHeight = 60;
+            const playerSpeed = 4; // Slightly reduced speed for control
+
+            // Ball properties
+            const ballRadius = 10;
+
+            // Hoop properties (defined as objects for left and right hoops)
+            const rightHoop = {
+                x: canvas.width - 80,
+                y: canvas.height / 2 - 30,
+                width: 10,
+                height: 60,
+                rimHeight: 10,
+                netColor: '#ecf0f1',
+                backboardWidth: 5,
+                backboardHeight: 60,
+                rimOffset: -30 // Rim is to the left of the backboard for the right hoop
+            };
+
+            const leftHoop = {
+                x: 80, // Position on the left side
+                y: canvas.height / 2 - 30,
+                width: 10,
+                height: 60,
+                rimHeight: 10,
+                netColor: '#ecf0f1',
+                backboardWidth: 5,
+                backboardHeight: 60,
+                rimOffset: 0 // Rim is to the right of the backboard for the left hoop
+            };
+
+            let player1 = {
+                x: 100,
+                y: canvas.height / 2 - playerHeight / 2,
+                dx: 0,
+                dy: 0,
+                color: '#000080', // Navy blue for Pacers
+                jerseyColor: '#ffd700', // Gold for Pacers
+                team: 'Pacers',
+                hasBall: true,
+                isChargingShot: false,
+                chargeStartTime: 0,
+                onFire: false, // For "On Fire" effect
+                fireCounter: 0, // Shots made in a row
+                offensiveHoop: rightHoop // Player1 shoots at the right hoop
+            };
+
+            let player2 = { // AI Player
+                x: canvas.width - 200,
+                y: canvas.height / 2 - playerHeight / 2,
+                dx: 0,
+                dy: 0,
+                color: '#4169E1', // Royal blue for OKC
+                jerseyColor: '#ff4500', // Orange for OKC
+                team: 'Thunder',
+                hasBall: false,
+                onFire: false,
+                fireCounter: 0,
+                aiSpeed: initialAiSpeed, // Initialize with base speed
+                offensiveHoop: leftHoop // Player2 shoots at the left hoop
+            };
+
+            let ball = {
+                x: player1.x + playerWidth / 2 + ballRadius,
+                y: player1.y + playerHeight / 2,
+                dx: 0,
+                dy: 0,
+                color: '#ff8c00', // Orange ball
+                inAir: false
+            };
+
+            // Keyboard input state
+            const keys = {};
+
+            // --- Game Functions ---
+
+            /**
+             * Displays a message box on the screen.
+             * @param {string} message - The text to display.
+             * @param {string} buttonText - The text for the button.
+             * @param {function} callback - Function to execute when the button is clicked.
+             */
+            function showMessageBox(message, buttonText, callback) {
+                messageText.innerHTML = message; // Use innerHTML for <br>
+                messageButton.textContent = buttonText;
+                messageButton.onclick = () => {
+                    messageBox.classList.remove('active');
+                    callback();
+                };
+                messageBox.classList.add('active');
+                gamePaused = true; // Pause game while message is active
+            }
+
+            /**
+             * Hides the message box.
+             */
+            function hideMessageBox() {
+                messageBox.classList.remove('active');
+                gamePaused = false;
+            }
+
+            /**
+             * Initializes the game state.
+             */
+            function initializeGame() {
+                pacersScore = 0;
+                thunderScore = 0;
+                currentQuarter = 1;
+                currentPossessionTeam = 'Pacers'; // Pacers start with the ball
+                lastShooter = null; // Clear last shooter on game start
+                currentAiStealChance = baseAiStealChance; // Reset steal chance for new game
+                player2.aiSpeed = initialAiSpeed; // Reset AI speed
+                hasBoostedAiDifficulty = false; // Reset difficulty spike flag
+                resetBallAndPossession(false); // Initial ball placement with Pacers
+                updateScoreboard();
+
+                gamePaused = false; // Unpause the game after initialization
+                startGameLoop(); // Start the animation loop
+            }
+
+            /**
+             * Updates the scoreboard display.
+             */
+            function updateScoreboard() {
+                pacersScoreElem.textContent = pacersScore;
+                thunderScoreElem.textContent = thunderScore;
+                gameQuarterElem.textContent = `QTR ${currentQuarter}`;
+                shotClockElem.textContent = `SHOT ${shotClock}`;
+
+                // Difficulty spike check
+                if (pacersScore >= 6 && !hasBoostedAiDifficulty) {
+                    showMessageBox("THUNDER GETS FIRED UP!", "BRING IT ON!", () => {
+                        player2.aiSpeed = boostedAiSpeed; // Increase AI speed
+                        hasBoostedAiDifficulty = true; // Set flag
+                        hideMessageBox();
+                    });
+                }
+            }
+
+            /**
+             * Resets and starts the shot clock.
+             */
+            function resetShotClock() {
+                clearInterval(shotClockInterval);
+                shotClock = 24;
+                shotClockInterval = setInterval(() => {
+                    if (!gamePaused && !isScoring && shotClock > 0) {
+                        shotClock--;
+                        updateScoreboard();
+                    } else if (!gamePaused && !isScoring && shotClock <= 0) {
+                        // Shot clock violation logic (turnover)
+                        console.log("Shot clock violation!");
+                        showMessageBox("SHOT CLOCK VIOLATION!", "OK", () => {
+                            resetBallAndPossession(true); // True indicates a turnover
+                            hideMessageBox();
+                        });
+                    }
+                }, 1000);
+            }
+
+            /**
+             * Resets ball possession and game state after various events.
+             * @param {boolean} isTurnover - True if possession should flip (e.g., shot clock, out of bounds, steal).
+             * @param {string} [scoringTeam] - The team that scored, if applicable (only for scores).
+             */
+            function resetBallAndPossession(isTurnover = false, scoringTeam = null) {
+                // Clear any existing ball possession
+                player1.hasBall = false;
+                player2.hasBall = false;
+                ball.inAir = false;
+                ball.dx = 0;
+                ball.dy = 0;
+                isScoring = false; // Reset scoring animation flag
+
+                // Determine who gets possession next
+                if (scoringTeam) { // After a successful score, possession always goes to the other team
+                    currentPossessionTeam = (scoringTeam === 'Pacers') ? 'Thunder' : 'Pacers';
+                } else if (isTurnover) { // After a turnover (shot clock, out of bounds, steal), possession flips
+                    currentPossessionTeam = (currentPossessionTeam === 'Pacers') ? 'Thunder' : 'Pacers';
+                }
+                // If neither of the above (i.e., a missed shot that grounded inbounds),
+                // the ball is now loose and needs to be grabbed. We *don't* explicitly set hasBall here.
+
+                // Place ball with the player of the team that now has possession, or leave it loose
+                if (!isTurnover && !scoringTeam) {
+                    // Ball remains loose on the court, waiting for a grab
+                    console.log("Ball is loose, grab with X!");
+                    // No explicit hasBall setting here, just ensure it's not assigned
+                    // The player (or AI) will need to actively grab it.
+                } else {
+                    // Place ball with the player of the team that now has possession
+                    if (currentPossessionTeam === 'Pacers') {
+                        player1.hasBall = true;
+                        ball.x = player1.x + playerWidth / 2 + (player1.dx > 0 ? ballRadius : -ballRadius);
+                        ball.y = player1.y + playerHeight / 2;
+                    } else { // Thunder has possession
+                        player2.hasBall = true;
+                        ball.x = player2.x + playerWidth / 2 + (player2.dx > 0 ? ballRadius : -ballRadius);
+                        ball.y = player2.y + playerHeight / 2;
+                    }
+                }
+
+                // Reset player specific states
+                player1.fireCounter = 0;
+                player1.onFire = false;
+                player2.fireCounter = 0;
+                player2.onFire = false;
+
+                // Update AI steal chance based on current quarter (progressive difficulty)
+                currentAiStealChance = baseAiStealChance + (currentQuarter - 1) * stealChanceIncreasePerQuarter;
+                // Ensure it doesn't go too high (cap it if needed)
+                currentAiStealChance = Math.min(currentAiStealChance, 0.01); // Example cap at 1% per frame
+
+                // Reset shot clock for the new possession, but only if possession was transferred
+                if (isTurnover || scoringTeam) {
+                   resetShotClock();
+                } else {
+                    // If ball is just loose, shot clock continues to run until grabbed or a new event occurs.
+                    // Or, for simplicity in a game of this type, we could reset it for any new 'possession' phase.
+                    // For now, let's keep it running to make loose balls risky.
+                }
+            }
+
+            /**
+             * Draws the basketball court.
+             */
+            function drawCourt() {
+                // Main court
+                ctx.fillStyle = '#a0522d'; /* Sienna - wooden floor */
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Court lines (white, pixelated look)
+                ctx.strokeStyle = '#ecf0f1'; /* White */
+                ctx.lineWidth = 3; /* Chunky lines */
+
+                // Center court circle
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height / 2, 60, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Half-court line
+                ctx.beginPath();
+                ctx.moveTo(canvas.width / 2, 0);
+                ctx.lineTo(canvas.width / 2, canvas.height);
+                ctx.stroke();
+
+                // Three-point lines (approximate) - Left side (Pacers' side offense/Thunder defense)
+                ctx.beginPath();
+                ctx.moveTo(70, 0);
+                ctx.lineTo(70, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(70, canvas.height / 2, 80, -Math.PI / 2, Math.PI / 2);
+                ctx.stroke();
+
+                // Three-point lines (approximate) - Right side (Thunder's side offense/Pacers defense)
+                ctx.beginPath();
+                ctx.moveTo(canvas.width - 70, 0);
+                ctx.lineTo(canvas.width - 70, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(canvas.width - 70, canvas.height / 2, 80, Math.PI / 2, 3 * Math.PI / 2);
+                ctx.stroke();
+
+                // Baselines and Sidelines (already covered by rect border, but can explicitly draw if needed)
+                ctx.beginPath();
+                ctx.rect(0, 0, canvas.width, canvas.height);
+                ctx.stroke();
+            }
+
+            /**
+             * Draws a player sprite.
+             * @param {object} player - The player object.
+             */
+            function drawPlayer(player) {
+                // Body
+                ctx.fillStyle = player.color;
+                ctx.fillRect(player.x, player.y, playerWidth, playerHeight);
+
+                // Jersey (simple block)
+                ctx.fillStyle = player.jerseyColor;
+                ctx.fillRect(player.x, player.y + playerHeight / 4, playerWidth, playerHeight / 2);
+
+                // Head (simple square)
+                ctx.fillStyle = '#fceac6'; /* Skin tone */
+                ctx.fillRect(player.x + playerWidth / 4, player.y - 15, playerWidth / 2, 15);
+
+                // Legs (simple rectangles)
+                ctx.fillStyle = '#333'; /* Dark shorts */
+                ctx.fillRect(player.x, player.y + playerHeight, playerWidth / 2 - 2, 10);
+                ctx.fillRect(player.x + playerWidth / 2 + 2, player.y + playerHeight, playerWidth / 2 - 2, 10);
+
+                // Player Number (simple text for now)
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px "Press Start 2P"';
+                ctx.textAlign = 'center';
+                ctx.fillText('95', player.x + playerWidth / 2, player.y + playerHeight / 2 + 5);
+
+                // "On Fire" effect
+                if (player.onFire) {
+                    ctx.fillStyle = 'rgba(255, 165, 0, 0.7)'; // Orange translucent
+                    ctx.beginPath();
+                    ctx.arc(player.x + playerWidth / 2, player.y - 30, 15, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Red translucent
+                    ctx.beginPath();
+                    ctx.arc(player.x + playerWidth / 2, player.y - 30, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Shot power bar for player1
+                if (player === player1 && player.isChargingShot) {
+                    const maxChargeTime = 1000; // 1 second for full charge
+                    const chargeDuration = Math.min(Date.now() - player.chargeStartTime, maxChargeTime);
+                    const chargePercentage = chargeDuration / maxChargeTime;
+
+                    const barWidth = 40;
+                    const barHeight = 8;
+                    const barX = player.x + playerWidth / 2 - barWidth / 2;
+                    const barY = player.y - 40;
+
+                    ctx.fillStyle = '#555'; // Background of power bar
+                    ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                    ctx.fillStyle = `hsl(${chargePercentage * 120}, 100%, 50%)`; // Green to red
+                    ctx.fillRect(barX, barY, barWidth * chargePercentage, barHeight);
+
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(barX, barY, barWidth, barHeight);
+                }
+            }
+
+            /**
+             * Draws the basketball.
+             * @param {object} ball - The ball object.
+             */
+            function drawBall(ball) {
+                ctx.fillStyle = ball.color;
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#8b4513'; // Darker lines for ball
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(ball.x, ball.y - ballRadius);
+                ctx.lineTo(ball.x, ball.y + ballRadius);
+                ctx.stroke();
+            }
+
+            /**
+             * Draws a basketball hoop.
+             * @param {object} hoop - The hoop object (leftHoop or rightHoop).
+             */
+            function drawHoop(hoop) {
+                // Backboard
+                ctx.fillStyle = '#bdc3c7'; /* Light grey backboard */
+                ctx.fillRect(hoop.x, hoop.y - hoop.height / 2, hoop.backboardWidth, hoop.backboardHeight);
+
+                // Rim
+                ctx.fillStyle = '#e74c3c'; /* Red rim */
+                // The rim position depends on whether it's a left or right hoop
+                const rimX = hoop.x + (hoop === rightHoop ? hoop.rimOffset : hoop.backboardWidth);
+                ctx.fillRect(rimX, hoop.y + hoop.height / 2 - hoop.rimHeight, 30, 5);
+
+                // Net (simple lines) - draw a bit below the rim for visual effect
+                ctx.strokeStyle = hoop.netColor;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const netStartX = hoop.x + (hoop === rightHoop ? hoop.rimOffset : hoop.backboardWidth);
+                const netOffsetX = (hoop === rightHoop) ? -10 : 10;
+
+                ctx.moveTo(netStartX, hoop.y + hoop.height / 2 + 5);
+                ctx.lineTo(netStartX + netOffsetX, hoop.y + hoop.height / 2 + 20);
+                ctx.lineTo(netStartX + netOffsetX * 2, hoop.y + hoop.height / 2 + 5);
+                ctx.lineTo(netStartX + netOffsetX * 3, hoop.y + hoop.height / 2 + 20);
+                ctx.stroke();
+            }
+
+            /**
+             * Updates player movement based on keyboard input.
+             */
+            function updatePlayerMovement() {
+                // Player 1 (controlling player)
+                player1.dx = 0;
+                player1.dy = 0;
+
+                if (keys['ArrowUp']) player1.dy = -playerSpeed;
+                if (keys['ArrowDown']) player1.dy = playerSpeed;
+                if (keys['ArrowLeft']) player1.dx = -playerSpeed;
+                if (keys['ArrowRight']) player1.dx = playerSpeed;
+
+                player1.x += player1.dx;
+                player1.y += player1.dy;
+
+                // Keep player within canvas bounds
+                if (player1.x < 0) player1.x = 0;
+                if (player1.x + playerWidth > canvas.width) player1.x = canvas.width - playerWidth;
+                if (player1.y < 0) player1.y = 0;
+                if (player1.y + playerHeight > canvas.height) player1.y = canvas.height - playerHeight;
+
+                // If player has ball, move ball with player
+                if (player1.hasBall && !ball.inAir) { // Only move ball if not in air
+                    // Adjust ball position slightly to the side of player for dribbling effect
+                    const ballOffsetX = (player1.dx !== 0) ? (player1.dx > 0 ? ballRadius : -ballRadius) : ballRadius;
+                    ball.x = player1.x + playerWidth / 2 + ballOffsetX;
+                    ball.y = player1.y + playerHeight / 2;
+                }
+            }
+
+            /**
+             * Updates AI player (player2) movement and actions.
+             */
+            function updateAImovement() {
+                player2.dx = 0;
+                player2.dy = 0;
+
+                const aiSpeed = player2.aiSpeed;
+                const grabDistance = 50; // Distance for AI to grab a loose ball
+
+                // AI tries to get the ball if loose
+                if (!ball.inAir && !player1.hasBall && !player2.hasBall) {
+                    const distToBall = Math.hypot(player2.x + playerWidth/2 - ball.x, player2.y + playerHeight/2 - ball.y);
+                    if (distToBall < grabDistance) { // Close enough to pick up
+                        player2.hasBall = true;
+                        currentPossessionTeam = 'Thunder';
+                        resetShotClock(); // Reset shot clock as new possession starts
+                        ball.x = player2.x + playerWidth / 2 + (player2.dx > 0 ? ballRadius : -ballRadius);
+                        ball.y = player2.y + playerHeight / 2;
+                    } else {
+                        // Move towards loose ball
+                        if (ball.x > player2.x + playerWidth/2) player2.dx = aiSpeed;
+                        else if (ball.x < player2.x + playerWidth/2) player2.dx = -aiSpeed;
+
+                        if (ball.y > player2.y + playerHeight/2) player2.dy = aiSpeed;
+                        else if (ball.y < player2.y + playerHeight/2) player2.dy = -aiSpeed;
+                    }
+                }
+
+                if (player2.hasBall) {
+                    // If AI has ball, ensure ball moves with AI
+                    if (!ball.inAir) {
+                        // Adjust ball position slightly to the side of player for dribbling effect
+                        const ballOffsetX = (player2.dx !== 0) ? (player2.dx > 0 ? ballRadius : -ballRadius) : -ballRadius;
+                        ball.x = player2.x + playerWidth / 2 + ballOffsetX;
+                        ball.y = player2.y + playerHeight / 2;
+                    }
+
+                    // AI offensive movement and shooting
+                    const targetX = player2.offensiveHoop.x + player2.offensiveHoop.width / 2;
+                    const targetY = player2.offensiveHoop.y + player2.offensiveHoop.height / 2;
+                    const distanceToHoop = Math.hypot(player2.x - targetX, player2.y - targetY);
+                    const shootingRange = 150; // AI will shoot if within this distance
+
+                    // Evasion logic when player1 is close and AI has ball
+                    const distToPlayer1 = Math.hypot(player2.x - player1.x, player2.y - player1.y);
+                    const evasionThreshold = 100; // Distance at which AI starts to evade
+
+                    if (distToPlayer1 < evasionThreshold) {
+                        // Calculate vector away from player1
+                        const evadeDx = player2.x - player1.x;
+                        const evadeDy = player2.y - player1.y;
+                        const evadeAngle = Math.atan2(evadeDy, evadeDx);
+
+                        // Prioritize evasion with movement away from player1, and a slight wobble
+                        player2.dx = Math.cos(evadeAngle) * aiSpeed + (Math.random() - 0.5) * aiSpeed * 0.5;
+                        player2.dy = Math.sin(evadeAngle) * aiSpeed + (Math.random() - 0.5) * aiSpeed * 0.5;
+
+                        // Ensure AI doesn't go out of bounds while evading
+                        if (player2.x + player2.dx < 0 || player2.x + player2.dx + playerWidth > canvas.width) {
+                            player2.dx *= -1; // Reverse X direction if hitting wall
+                        }
+                        if (player2.y + player2.dy < 0 || player2.y + player2.dy + playerHeight > canvas.height) {
+                            player2.dy *= -1; // Reverse Y direction if hitting wall
+                        }
+
+                    } else if (distanceToHoop < shootingRange && Math.random() < 0.03) { // Increased chance to shoot if in range
+                        aiShoot();
+                    } else {
+                        // Move towards the offensive hoop
+                        if (player2.x > targetX + 50) player2.dx = -aiSpeed;
+                        else if (player2.x < targetX - 50) player2.dx = aiSpeed;
+
+                        if (player2.y > targetY) player2.dy = -aiSpeed;
+                        else if (player2.y < targetY) player2.dy = aiSpeed;
+                    }
+                } else if (player1.hasBall) {
+                    // AI is defending player1, trying to steal
+                    const distBetweenPlayers = Math.hypot(player2.x - player1.x, player2.y - player1.y);
+                    const stealDistance = 40; // Max distance for a steal attempt
+
+                    if (distBetweenPlayers < stealDistance && Math.random() < currentAiStealChance) {
+                        attemptSteal(player2, player1);
+                    } else {
+                        // AI defending movement: position between player1 and player1's hoop
+                        const targetX = player1.x + playerWidth / 2 + 50;
+                        const targetY = player1.y;
+
+                        if (player2.x < targetX) player2.dx = aiSpeed;
+                        else if (player2.x > targetX) player2.dx = -aiSpeed;
+
+                        if (player2.y < targetY) player2.dy = aiSpeed;
+                        else if (player2.y > targetY) player2.dy = -aiSpeed;
+                    }
+                } else if (ball.inAir) {
+                    // AI chases the ball when it's in the air
+                    if (ball.x > player2.x + playerWidth / 2) player2.dx = aiSpeed;
+                    else if (ball.x < player2.x + playerWidth / 2) player2.dx = -aiSpeed;
+
+                    if (ball.y > player2.y + playerHeight / 2) player2.dy = aiSpeed;
+                    else if (ball.y < player2.y + playerHeight / 2) player2.dy = -aiSpeed;
+                }
+
+                player2.x += player2.dx;
+                player2.y += player2.dy;
+
+                // Keep AI player within bounds
+                if (player2.x < 0) player2.x = 0;
+                if (player2.x + playerWidth > canvas.width) player2.x = canvas.width - playerWidth;
+                if (player2.y < 0) player2.y = 0;
+                if (player2.y + playerHeight > canvas.height) player2.y = canvas.height - playerHeight;
+            }
+
+            /**
+             * Attempts a steal from an opponent.
+             * @param {object} stealer - The player attempting the steal (AI).
+             * @param {object} dribbler - The player holding the ball (human player).
+             */
+            function attemptSteal(stealer, dribbler) {
+                if (dribbler.hasBall && !ball.inAir) {
+                    dribbler.hasBall = false;
+                    stealer.hasBall = true;
+                    // Move ball instantly to stealer
+                    ball.x = stealer.x + playerWidth / 2 + (stealer.dx > 0 ? ballRadius : -ballRadius);
+                    ball.y = stealer.y + playerHeight / 2;
+                    currentPossessionTeam = stealer.team;
+                    showMessageBox("STEAL!", "OH NO!", () => {
+                        hideMessageBox();
+                        resetShotClock();
+                    });
+                }
+            }
+
+
+            /**
+             * Handles ball movement and collision with hoops and backboards.
+             */
+            function updateBallMovement() {
+                if (ball.inAir) {
+                    ball.x += ball.dx;
+                    ball.y += ball.dy;
+
+                    // Apply gravity
+                    ball.dy += 0.5;
+
+                    // Ball collision with floor (more realistic bouncing)
+                    if (ball.y + ballRadius > canvas.height) {
+                        ball.y = canvas.height - ballRadius;
+                        ball.dy *= -0.6; // Bounce with energy loss (more bounces)
+                        ball.dx *= 0.9; // Horizontal friction
+
+                        if (Math.abs(ball.dy) < 1 && Math.abs(ball.dx) < 1) { // Stop bouncing if too little energy
+                            ball.inAir = false;
+                            ball.dx = 0;
+                            ball.dy = 0;
+                            if (!isScoring) { // Only allow if not in the middle of a score animation
+                                // Ball is now loose, needs to be grabbed. Shot clock continues.
+                                console.log("Missed shot, ball is loose!");
+                            }
+                        }
+                    }
+
+                    // Ball collision with side walls (out of bounds)
+                    if (ball.x - ballRadius < 0 || ball.x + ballRadius > canvas.width) {
+                        ball.inAir = false;
+                        ball.dx = 0;
+                        ball.dy = 0;
+                        if (!isScoring) { // Only reset possession if not in the middle of a score animation
+                            showMessageBox("OUT OF BOUNDS!", "OK", () => {
+                                resetBallAndPossession(true); // True indicates a turnover
+                                hideMessageBox();
+                            });
+                        }
+                        return; // Exit to prevent further ball movement until reset
+                    }
+
+                    // Check collisions for both hoops
+                    const hoops = [rightHoop, leftHoop];
+
+                    for (const currentHoop of hoops) {
+                        const backboardX = currentHoop.x;
+                        const backboardY = currentHoop.y - currentHoop.height / 2;
+                        const backboardWidth = currentHoop.backboardWidth;
+                        const backboardHeight = currentHoop.backboardHeight;
+
+                        // Collision with backboard
+                        if (ball.x + ballRadius > backboardX && ball.x - ballRadius < backboardX + backboardWidth &&
+                            ball.y + ballRadius > backboardY && ball.y - ballRadius < backboardY + backboardHeight) {
+
+                            ball.dx *= -0.8; // Bounce off with some energy loss
+
+                            const backboardCenterY = backboardY + backboardHeight / 2;
+                            const hitOffset = Math.abs(ball.y - backboardCenterY);
+                            const sweetSpotTolerance = 20; // How close to center for sweet spot
+
+                            if (hitOffset < sweetSpotTolerance && ball.dy > 0) { // If hit near center and moving downwards
+                                // Adjust trajectory to go into the net
+                                ball.dy = Math.abs(ball.dy) * 0.5; // Reduce vertical bounce, push down slightly
+                                ball.dx = (currentHoop === rightHoop) ? -2 : 2; // Push towards the rim (left for right hoop, right for left hoop)
+                            }
+                        }
+
+                        // Collision with hoop rim for scoring
+                        // Calculate rim bounding box based on hoop direction
+                        const rimLeft = (currentHoop === rightHoop) ? currentHoop.x - 30 : currentHoop.x + currentHoop.backboardWidth;
+                        const rimRight = (currentHoop === rightHoop) ? currentHoop.x : currentHoop.x + currentHoop.backboardWidth + 30;
+                        const rimTop = currentHoop.y + currentHoop.height / 2 - currentHoop.rimHeight;
+                        const rimBottom = currentHoop.y + currentHoop.height / 2 + currentHoop.rimHeight; // Corrected variable name
+
+                        // Check if ball is within the horizontal bounds of the rim
+                        const ballInRimX = (ball.x + ballRadius > rimLeft && ball.x - ballRadius < rimRight);
+
+                        if (ballInRimX && ball.y > rimTop && ball.y < rimBottom && !isScoring) {
+
+                            // Check if ball goes through the hoop from top to bottom
+                            if (ball.dy > 0) { // Moving downwards
+                                console.log("SCORE!");
+                                let scoringTeam = '';
+                                if (currentHoop === rightHoop) { // Scored on Pacers' offensive hoop
+                                    pacersScore += 2;
+                                    scoringTeam = 'Pacers';
+                                    player1.fireCounter++;
+                                    if (player1.fireCounter >= 3) player1.onFire = true;
+                                } else { // Scored on Thunder's offensive hoop
+                                    thunderScore += 2;
+                                    scoringTeam = 'Thunder';
+                                    player2.fireCounter++;
+                                    if (player2.fireCounter >= 3) player2.onFire = true;
+                                }
+                                updateScoreboard();
+                                isScoring = true; // Set flag to allow ball to pass through
+                                showMessageBox("SWISH!", "NICE SHOT!", () => {}); // Message for score
+                                setTimeout(() => {
+                                    hideMessageBox();
+                                    resetBallAndPossession(false, scoringTeam); // Not a turnover, but pass scoring team
+                                }, 500); // Wait 0.5 seconds for ball to pass
+                                return; // Exit to prevent further ball movement until reset
+                            } else {
+                                // Hit rim from below or side, bounce off
+                                ball.dy *= -0.8;
+                                ball.dx *= -0.8;
+                            }
+                        }
+                    }
+                }
+            }
+
+            /**
+             * Handles the player's shooting action based on charge power.
+             */
+            function playerShoot() {
+                if (player1.hasBall && !ball.inAir && !player1.isChargingShot) {
+                    player1.hasBall = false;
+                    ball.inAir = true;
+                    lastShooter = player1; // Set the last shooter for possession logic
+
+                    const maxChargeTime = 1000; // Same as in drawPlayer
+                    const chargeDuration = Math.min(Date.now() - player1.chargeStartTime, maxChargeTime);
+                    const shootPower = chargeDuration / maxChargeTime; // 0 to 1
+
+                    // Adjust initial velocities based on shootPower
+                    // More power -> higher initial speed, flatter trajectory (for longer shots)
+                    // Less power -> lower initial speed, higher arc (for closer shots/layups)
+                    const minDx = 5;
+                    const maxDx = 20;
+                    const minDy = -10;
+                    const maxDy = -20;
+
+                    const initialDx = minDx + (maxDx - minDx) * shootPower;
+                    const initialDy = minDy + (maxDy - minDy) * shootPower;
+
+                    // Ensure ball shoots towards the player's offensive hoop (rightHoop)
+                    ball.dx = initialDx * (player1.offensiveHoop.x - player1.x > 0 ? 1 : -1); // Determine direction
+                    ball.dy = initialDy;
+
+                    // Shot clock continues until ball is retrieved if it misses, or reset on score.
+                    // resetShotClock(); // Removed: Shot clock only resets on new possession (grab/turnover/score)
+                    player1.fireCounter = 0; // Reset fire counter on shot attempt
+                    player1.onFire = false;
+                }
+            }
+
+            /**
+             * Handles the AI player's shooting action.
+             */
+            function aiShoot() {
+                if (player2.hasBall && !ball.inAir) {
+                    player2.hasBall = false;
+                    ball.inAir = true;
+                    lastShooter = player2; // Set the last shooter for possession logic
+
+                    // AI shoots towards its offensive hoop (leftHoop)
+                    // Aim slightly above the center of the rim for a better arc
+                    const targetX = player2.offensiveHoop.x + player2.offensiveHoop.width / 2 + (player2.offensiveHoop.rimOffset === 0 ? 15 : -15); // Adjust for rim offset
+                    const targetY = player2.offensiveHoop.y + player2.offensiveHoop.height / 2 - player2.offensiveHoop.rimHeight / 2 - 5; // Aim slightly higher
+
+                    // Calculate a more precise trajectory
+                    const dx = targetX - ball.x;
+                    const dy = targetY - ball.y;
+
+                    // Simple quadratic aiming approximation (can be very complex for perfect aim)
+                    const gravity = 0.5;
+                    const timeToTarget = Math.abs(dx / 10); // Estimate time based on horizontal distance
+
+                    ball.dx = dx / timeToTarget;
+                    ball.dy = dy / timeToTarget - 0.5 * gravity * timeToTarget; // Counter gravity influence
+
+                    // Apply random variation based on difficulty boost
+                    const currentAiAccuracyVariance = hasBoostedAiDifficulty ? aiBoostedShotAccuracyVariance : aiBaseShotAccuracyVariance;
+                    ball.dx += (Math.random() - 0.5) * currentAiAccuracyVariance;
+                    ball.dy += (Math.random() - 0.5) * currentAiAccuracyVariance;
+
+                    // Ensure ball has enough initial velocity
+                    const speed = Math.hypot(ball.dx, ball.dy);
+                    const minSpeed = 15;
+                    if (speed < minSpeed) {
+                        const scale = minSpeed / speed;
+                        ball.dx *= scale;
+                        ball.dy *= scale;
+                    }
+
+                    // Shot clock continues until ball is retrieved if it misses, or reset on score.
+                    // resetShotClock(); // Removed: Shot clock only resets on new possession (grab/turnover/score)
+                    player2.fireCounter = 0;
+                    player2.onFire = false;
+                }
+            }
+
+            /**
+             * The main game loop that updates and draws everything.
+             */
+            function gameLoop() {
+                if (gamePaused) {
+                    animationFrameId = requestAnimationFrame(gameLoop); // Keep requesting to check for unpause
+                    return;
+                }
+
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw elements
+                drawCourt();
+                drawHoop(rightHoop); // Draw the right hoop
+                drawHoop(leftHoop);  // Draw the left hoop
+                drawPlayer(player1);
+                drawPlayer(player2); // Draw AI player
+                drawBall(ball);
+
+                // Update game logic
+                updatePlayerMovement();
+                updateAImovement(); // Update AI player
+                updateBallMovement();
+
+                // Request next frame
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            /**
+             * Starts the main game animation loop.
+             */
+            function startGameLoop() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId); // Cancel any existing loop
+                }
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            // --- Event Listeners ---
+
+            // Keyboard press handler
+            document.addEventListener('keydown', (e) => {
+                keys[e.key] = true;
+
+                if (e.key === 'z' || e.key === 'Z') { // Shoot/Dunk
+                    if (player1.hasBall && !ball.inAir && !player1.isChargingShot) {
+                        player1.isChargingShot = true;
+                        player1.chargeStartTime = Date.now();
+                    }
+                }
+                if (e.key === 'x' || e.key === 'X') { // Grab Ball / Steal
+                    // Player attempts to grab a loose ball
+                    if (!player1.hasBall && !ball.inAir && !player2.hasBall) { // If ball is loose and neither has it
+                        const grabDistance = 50; // How close player needs to be to grab
+                        const distToBall = Math.hypot(player1.x + playerWidth/2 - ball.x, player1.y + playerHeight/2 - ball.y);
+
+                        if (distToBall < grabDistance) {
+                            player1.hasBall = true;
+                            currentPossessionTeam = 'Pacers';
+                            // Position ball next to player based on player's last movement or default
+                            ball.x = player1.x + playerWidth / 2 + (player1.dx > 0 ? ballRadius : -ballRadius);
+                            ball.y = player1.y + playerHeight / 2;
+                            resetShotClock(); // New possession starts, reset shot clock
+                            showMessageBox("BALL GRABBED!", "GOT IT!", () => hideMessageBox());
+                        }
+                    }
+                    // Steal logic is handled within updateAImovement for AI attempting to steal from player
+                    // and will automatically trigger a possession change/message box.
+                }
+                if (e.key === 'p' || e.key === 'P') { // Pause
+                    gamePaused = !gamePaused;
+                    if (gamePaused) {
+                        showMessageBox("GAME PAUSED", "RESUME", () => {
+                            hideMessageBox();
+                            startGameLoop();
+                        });
+                    } else {
+                        hideMessageBox();
+                    }
+                }
+            });
+
+            // Keyboard release handler
+            document.addEventListener('keyup', (e) => {
+                keys[e.key] = false;
+
+                if (e.key === 'z' || e.key === 'Z') {
+                    if (player1.isChargingShot) {
+                        player1.isChargingShot = false;
+                        playerShoot();
+                    }
+                }
+            });
+
+            // Handle window resizing (CSS handles most of it, but good to have)
+            function resizeCanvas() {
+                // For a pixel art game, fixed canvas dimensions with CSS scaling is common.
+                // If you wanted dynamic canvas dimensions and redraw logic, it would go here.
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+
+            // Initial call to show the start message
+            showMessageBox("Welcome to Hardwood Hoops '95! <br> Hold Z to charge your shot, press X to grab loose balls!", "START GAME", initializeGame);
+        };
+    </script>
+</body>
+</html>
